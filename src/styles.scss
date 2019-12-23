@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap');
+
+$font-family: 'Roboto', sans-serif;
+
+$primary-color: #f06292;
+$primary-color-light: #ff94c2;
+$primary-color-dark: #ba2d65;
+$primary-text: #000000;
+
+$inactive-color: #9b9b9b;
+$inactive-color-light: #b9b9b9;
+$inactive-color-dark: #7d7d7d;
+$inactive-text: #000000;
+
+$secondary-color: #d81b60;
+$secondary-color-light: #ff5c8d;
+$secondary-color-dark: #a00037;
+$secondary-text: #ffffff;
+
+html {
+  font-size: 14px;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  padding-left: 30px;
+  margin-top: 20px;
+}
+
+#shot {
+  background-color: $secondary-color;
+  color: $secondary-text;
+  border: 1px solid $secondary-color-dark;
+  border-radius: 3px;
+  padding: 8px 10px;
+  font-family: $font-family;
+  font-weight: bold;
+  font-size: 1.2rem;
+
+  transition: all 1.5s ease-in-out;
+
+  &:active {
+    background-color: $secondary-color-dark;
+  }
+
+  &.disabled {
+    background-color: $inactive-color;
+    color: $inactive-text;
+    border: 1px solid $inactive-color-dark;
+  }
+}
+
+.app__block {
+  margin-bottom: 10px;
+}
+
+.block {
+  position: relative;
+  display: flex;
+}
+
+.part-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.block__content {
+  border: 1px solid $primary-color-dark;
+  border-radius: 4px;
+  padding: 1em;
+  width: 45vw;
+  max-width: 700px;
+  min-width: 350px;
+}
+
+.block__heading {
+  margin: 0;
+  color: $primary-text;
+  font-family: $font-family;
+}
+
+.block__text {
+  margin: 1em 0 0;
+  color: $primary-text;
+  font-family: $font-family;
+}

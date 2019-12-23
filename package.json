@@ -1,0 +1,21 @@
+{
+  "name": "particles",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "sass": "^1.23.7"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "html2canvas": "^1.0.0-rc.5",
+    "lorem-ipsum": "^2.0.3",
+    "rxjs": "^6.5.3"
+  }
+}
