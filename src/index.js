@@ -1,12 +1,108 @@
-import './styles.scss'
 import 'babel-polyfill'
-import {LoremIpsum} from 'lorem-ipsum'
 import h2c from 'html2canvas'
+import {LoremIpsum} from 'lorem-ipsum'
+import './styles.scss'
+
+const BLOCKS_COUNT = 3;
+const CANVASES_PER_BLOCK = 36;
+const DUPLICATION_FACTOR = 2;
+const SHIFT_FACTOR = 12;
+const ANNIHILATION_DELAY = 100;
+const ANNIHILATION_PART_DELAY = 80;
+const CANVAS_TRANSITION_DURATION = 3000;
+
+let blocks = [];
+const blocksCanvases = new Map();
+
+const app = document.querySelector('#app');
+const shotButton = document.querySelector('#shot');
+const reloadButton = document.querySelector('#reload');
+
+reloadButton.addEventListener('click', main);
+
+function main() {
+    app.innerHTML = '';
+
+    shotButton.classList.add('disabled');
+
+    const lipsum = getLoremIpsum();
+    const canvasPreparations = [];
+
+    for (let i = 0; i < BLOCKS_COUNT; i++) {
+        const blockId = `block-${i}`;
+        let block = createBlock(blockId);
+        fillBlock(block, lipsum);
+
+        app.append(block);
+
+        const canvasPreparation = prepareCanvas(block.querySelector('.block__content'));
+        canvasPreparations.push(canvasPreparation);
+        canvasPreparation.then(preparationResults => {
+            blocksCanvases.set(blockId, {
+                placeholder: preparationResults.placeholder,
+                canvases: preparationResults.canvases
+            });
+        });
+
+        blocks.push(block);
+    }
+
+    Promise.all(canvasPreparations).then(_ => {
+        shotButton.addEventListener('click', shotClickListener);
+        shotButton.classList.remove('disabled');
+    });
+}
+
+function shotClickListener() {
+    shotButton.removeEventListener('click', shotClickListener);
+    shotButton.classList.add('disabled');
+
+    const blockIdx = Math.floor(Math.random() * blocks.length);
+    const block = blocks[blockIdx];
+
+    block.innerHTML = "";
+
+    block.append(blocksCanvases.get(block.id).placeholder);
+
+    blocksCanvases.get(block.id).canvases.forEach((canvas, idx) => {
+        block.append(canvas);
+
+        setTimeout(() => {
+            const translateAngle = (Math.random() - .5) * 2 * Math.PI;
+            const rotateAngle = (Math.random() - .5) * 18;
+
+            canvas.style.transition = `all ${CANVAS_TRANSITION_DURATION}ms ease-out`;
+            canvas.style.transform = `rotate(${rotateAngle}deg) translate(${100 * Math.cos(translateAngle)}px, ${30 * Math.sin(translateAngle)}px) rotate(${rotateAngle}deg)`;
+            canvas.style.opacity = '0';
+        }, ANNIHILATION_DELAY + (ANNIHILATION_PART_DELAY * idx));
+    });
+
+
+    blocks = [
+        ...blocks.slice(0, blockIdx),
+        ...blocks.slice(blockIdx + 1, blocks.length)
+    ];
+
+    if (blocks.length > 0) {
+        let enableTimeout = ANNIHILATION_DELAY
+            + (ANNIHILATION_PART_DELAY * blocksCanvases.get(block.id).canvases.length)
+            + CANVAS_TRANSITION_DURATION
+            + 1;
+
+        setTimeout(() => {
+            shotButton.addEventListener('click', shotClickListener);
+            shotButton.classList.remove('disabled');
+        }, enableTimeout);
+    }
+}
 
 async function prepareCanvas(block) {
     const partsCanvases = [];
 
-    const originalCanvas = await h2c(block);
+    const originalCanvas = await h2c(block, {
+        scale: 1,
+        logging: false
+    });
 
     const width = originalCanvas.width;
     const height = originalCanvas.height;
@@ -20,14 +116,24 @@ async function prepareCanvas(block) {
 
     const parts = [];
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < CANVASES_PER_BLOCK; i++) {
         parts.push(originalCtx.createImageData(width, height));
     }
 
+    const partsCount = parts.length;
+    const partWidth = Math.floor(width / partsCount);
+
     for (let col = 0; col < width; col++) {
         for (let row = 0; row < height; row++) {
-            for (let i = 0; i < 2; i++) {
-                const partIdx = Math.floor(Math.random() * parts.length);
+            for (let i = 0; i < DUPLICATION_FACTOR; i++) {
+                let partIdx = Math.floor(partsCount * (Math.random() + 2 * col / width) / 3);
+
+                if (partIdx < 0) {
+                    partIdx = 0;
+                } else if (partIdx >= partsCount) {
+                    partIdx = partsCount - 1;
+                }
+
                 const dataOffset = 4 * (row * width + col);
 
                 for (let j = 0; j < 4; j++) {
@@ -53,58 +159,7 @@ async function prepareCanvas(block) {
     };
 }
 
-function main() {
-    const app = document.querySelector('#app');
-    app.innerHTML = '';
-
-    const shotButton = document.querySelector('#shot');
-    shotButton.classList.add('disabled');
-
-    const lipsum = getLoremIpsum();
-    const blocksCanvases = new Map();
-    let blocks = [];
-    const canvasPreparations = [];
-
-    for (let i = 0; i < 1; i++) {
-        const blockId = `block-${i}`;
-        let block = renderBlock(blockId);
-        fillBlock(block, lipsum);
-
-        app.append(block);
-
-        const canvasPreparation = prepareCanvas(block.querySelector('.block__content'));
-        canvasPreparations.push(canvasPreparation);
-        canvasPreparation.then(preparationResults => {
-            blocksCanvases.set(blockId, {
-                placeholder: preparationResults.placeholder,
-                canvases: preparationResults.canvases
-            });
-        });
-
-        blocks.push(block);
-    }
-
-    Promise.all(canvasPreparations).then(_ => {
-        shotButton.addEventListener('click', shotBtn => {
-
-            const blockIdx = Math.floor(Math.random() * blocks.length);
-            const block = blocks[blockIdx];
-
-            block.innerHTML = "";
-
-            block.append(blocksCanvases.get(block.id).placeholder);
-
-            blocksCanvases.get(block.id).canvases.forEach(canvas => {
-                block.append(canvas);
-            });
-
-            blocks = [...blocks.slice(0, blockIdx), ...blocks.slice(blockIdx + 1, blocks.length)]
-        });
-        shotButton.classList.remove('disabled');
-    });
-}
-
-function renderBlock(id) {
+function createBlock(id) {
     const block = document.createElement('div');
     block.classList.add('block', 'app__block');
     block.id = id;
@@ -131,18 +186,15 @@ function fillBlock(block, lipsum) {
     const heading = block.querySelector('.block__heading');
     const content = block.querySelector('.block__text');
 
-    // heading.innerHTML = lipsum.generateSentences(1);
-    // content.innerHTML = lipsum.generateParagraphs(1);
-
-    heading.innerHTML = 'Adipisicing ipsum elit ad velit laborum et excepteur.';
-    content.innerHTML = 'Magna pariatur tempor sint dolore duis amet. Do amet Lorem amet elit occaecat laborum anim. Ad tempor sit officia adipisicing. Nostrud enim ullamco culpa magna nulla. Dolor aute adipisicing aliquip exercitation. Sit aliquip duis commodo sint exercitation minim aliqua. Culpa dolore excepteur qui dolore dolor do. Laboris labore aliqua ipsum elit ad fugiat. Occaecat reprehenderit ipsum nisi proident excepteur excepteur.';
+    heading.innerHTML = lipsum.generateSentences(1);
+    content.innerHTML = lipsum.generateParagraphs(1);
 }
 
 function getLoremIpsum() {
     return new LoremIpsum({
         sentencesPerParagraph: {
-            min: 5,
-            max: 10
+            min: 9,
+            max: 14
         },
         wordsPerSentence: {
             min: 5,

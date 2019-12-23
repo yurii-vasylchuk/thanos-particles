@@ -21,14 +21,22 @@ html {
   font-size: 14px;
 }
 
-#app {
+.layout {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+
+  > * {
+    flex-grow: 1;
+    flex-basis: 0;
+  }
+}
+
+#app {
   padding-left: 30px;
   margin-top: 20px;
 }
 
-#shot {
+.control-btn {
   background-color: $secondary-color;
   color: $secondary-text;
   border: 1px solid $secondary-color-dark;
@@ -38,16 +46,19 @@ html {
   font-weight: bold;
   font-size: 1.2rem;
 
-  transition: all 1.5s ease-in-out;
+  transition: all 1s ease-in-out;
+  cursor: pointer;
 
   &:active {
     background-color: $secondary-color-dark;
   }
 
   &.disabled {
+    cursor: not-allowed;
     background-color: $inactive-color;
     color: $inactive-text;
     border: 1px solid $inactive-color-dark;
+    transition: none;
   }
 }
 
@@ -57,7 +68,8 @@ html {
 
 .block {
   position: relative;
-  display: flex;
+  width: 100%;
+  max-width: 700px;
 }
 
 .part-canvas {
@@ -67,12 +79,7 @@ html {
 }
 
 .block__content {
-  border: 1px solid $primary-color-dark;
   border-radius: 4px;
-  padding: 1em;
-  width: 45vw;
-  max-width: 700px;
-  min-width: 350px;
 }
 
 .block__heading {
@@ -82,7 +89,22 @@ html {
 }
 
 .block__text {
-  margin: 1em 0 0;
+  margin: 15px 0 0;
   color: $primary-text;
   font-family: $font-family;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    flex-direction: column-reverse;
+
+    > * {
+      flex-grow: 0;
+    }
+  }
+
+  .controls {
+    background-color: aquamarine;
+    margin-left: 30px;
+  }
 }
